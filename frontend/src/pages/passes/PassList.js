@@ -131,29 +131,29 @@ const PassList = () => {
 
   return (
     <div className="pass-list-page">
-      <div className="page-container">
+      <div className="passes-container">
         {/* Header */}
         <motion.div 
-          className="page-header"
+          className="passes-header"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <div className="header-content">
+          <div>
             <h1 className="page-title">
-              {filters.status === 'all' ? 'All Passes' : `${filters.status.charAt(0).toUpperCase() + filters.status.slice(1)} Passes`} 📋
+              {filters.status === 'all' ? 'All Passes' : `${filters.status.charAt(0).toUpperCase() + filters.status.slice(1)} Passes`}
             </h1>
-            <p className="page-subtitle">
+            <p className="passes-count">
               {pagination.totalPasses} passes found
             </p>
           </div>
           
-          <div className="header-actions">
-            <Link to="/passes/create" className="btn btn-primary">
+          {user.role === 'student' && (
+            <Link to="/passes/create" className="create-pass-btn">
               <span>Create New Pass</span>
-              <div className="btn-icon">➕</div>
+              <span>✨</span>
             </Link>
-          </div>
+          )}
         </motion.div>
 
         {/* Filters */}
@@ -163,7 +163,7 @@ const PassList = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
         >
-          <div className="filters-container">
+          <div className="filters-grid">
             <div className="filter-group">
               <label>Status:</label>
               <select 
