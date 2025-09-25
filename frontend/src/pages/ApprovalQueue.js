@@ -422,9 +422,9 @@ const ApprovalQueue = () => {
                           <span className="metadata-item">
                             📅 Requested: {dateUtils.formatRelativeTime(pass.createdAt)}
                           </span>
-                          {pass.student?.contactNumber && (
+                          {pass.student_id?.phone && (
                             <span className="metadata-item">
-                              📞 {pass.student.contactNumber}
+                              📞 {pass.student_id.phone}
                             </span>
                           )}
                         </div>

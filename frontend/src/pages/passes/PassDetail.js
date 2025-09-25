@@ -237,10 +237,10 @@ const PassDetail = () => {
                 <div className="student-details">
                   <h3 className="student-name">{pass.student?.name}</h3>
                   <p className="student-reg">📋 {pass.student?.regNumber}</p>
-                  <p className="student-year">🎓 {pass.student?.year} Year</p>
-                  <p className="student-dept">🏛️ {pass.student?.department}</p>
-                  {pass.student?.contactNumber && (
-                    <p className="student-contact">📞 {pass.student.contactNumber}</p>
+                  <p className="student-year">🎓 {pass.student_id?.year} Year</p>
+                  <p className="student-dept">🏛️ {pass.student_id?.department}</p>
+                  {pass.student_id?.phone && (
+                    <p className="student-contact">📞 {pass.student_id.phone}</p>
                   )}
                 </div>
               </div>

@@ -321,11 +321,11 @@ export const qrUtils = {
   generatePassQRData: (pass) => {
     return JSON.stringify({
       id: pass._id,
-      student: pass.student.name,
-      regNumber: pass.student.regNumber,
+      student: pass.student_id?.name || pass.student?.name,
+      regNumber: pass.student_id?.student_id || pass.student?.student_id,
       reason: pass.reason,
-      exitTime: pass.exitTime,
-      expectedReturnTime: pass.expectedReturnTime,
+      departure_time: pass.departure_time,
+      return_time: pass.return_time,
       securityToken: pass.securityToken,
     });
   },
