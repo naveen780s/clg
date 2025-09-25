@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSocket } from '../../contexts/SocketContext';
@@ -9,8 +9,9 @@ import { dateUtils, formatUtils } from '../../services/utils';
 import Loader from '../../components/common/Loader';
 
 const StudentDashboard = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { notifications } = useSocket();
+  const navigate = useNavigate();
   
   const [dashboardData, setDashboardData] = useState({
     recentPasses: [],
@@ -87,6 +88,31 @@ const StudentDashboard = () => {
     };
     return colors[status] || 'status-default';
   };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
+  // Logout Button Component
+  const LogoutButton = () => (
+    <button 
+      onClick={handleLogout}
+      className="quick-action logout-action"
+      style={{ 
+        background: 'var(--error-light)',
+        color: 'var(--error)',
+        border: '2px solid var(--error)',
+      }}
+    >
+      <div className="action-icon">🚪</div>
+      <span>Logout</span>
+    </button>
+  );
 
   if (loading) {
     return <Loader message="Loading your dashboard..." />;
@@ -303,6 +329,8 @@ const StudentDashboard = () => {
                     <div className="notification-badge">{notifications.length}</div>
                   )}
                 </Link>
+
+                <LogoutButton />
               </div>
             </motion.div>
 

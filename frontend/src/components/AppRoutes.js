@@ -2,6 +2,7 @@ import React, { Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Loader from '../components/common/Loader';
+import Layout from '../components/common/Layout';
 
 // Lazy load components
 const LandingPage = React.lazy(() => import('../pages/LandingPage'));
@@ -75,8 +76,9 @@ const DashboardRoute = () => {
 
 const AppRoutes = () => {
   return (
-    <Suspense fallback={<Loader />}>
-      <Routes>
+    <Layout>
+      <Suspense fallback={<Loader />}>
+        <Routes>
         {/* Public Routes */}
         <Route
           path="/"
@@ -191,8 +193,9 @@ const AppRoutes = () => {
 
         {/* 404 Route */}
         <Route path="*" element={<NotFound />} />
-      </Routes>
-    </Suspense>
+        </Routes>
+      </Suspense>
+    </Layout>
   );
 };
 

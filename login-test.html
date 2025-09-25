@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .form-group { margin: 10px 0; }
+        input { padding: 8px; margin: 5px; width: 200px; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; cursor: pointer; }
+        .result { margin: 20px 0; padding: 10px; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>Frontend-Backend Login Test</h1>
+    
+    <form id="loginForm">
+        <div class="form-group">
+            <label>Email:</label><br>
+            <input type="email" id="email" value="student@college.edu" required>
+        </div>
+        <div class="form-group">
+            <label>Password:</label><br>
+            <input type="password" id="password" value="password123" required>
+        </div>
+        <button type="submit">Login</button>
+    </form>
+    
+    <div id="result"></div>
+    
+    <h3>Test Credentials:</h3>
+    <ul>
+        <li>Student: student@college.edu / password123</li>
+        <li>Mentor: mentor@college.edu / password123</li>
+        <li>HOD: hod@college.edu / password123</li>
+        <li>Security: security@college.edu / password123</li>
+    </ul>
+
+    <script>
+        const API_BASE = 'http://localhost:5001/api';
+        
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const resultDiv = document.getElementById('result');
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        <h3>✅ Login Successful!</h3>
+                        <p><strong>User:</strong> ${data.data.user.name}</p>
+                        <p><strong>Role:</strong> ${data.data.user.role}</p>
+                        <p><strong>Department:</strong> ${data.data.user.department}</p>
+                        <p><strong>Token:</strong> ${data.data.token.substring(0, 50)}...</p>
+                    `;
+                    
+                    // Store token for testing
+                    localStorage.setItem('token', data.data.token);
+                    
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `
+                        <h3>❌ Login Failed</h3>
+                        <p>${data.message || data.error}</p>
+                    `;
+                }
+                
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `
+                    <h3>❌ Network Error</h3>
+                    <p>${error.message}</p>
+                    <p>Make sure the backend server is running on port 5001</p>
+                `;
+                console.error('Login error:', error);
+            }
+        });
+        
+        // Test backend connectivity on page load
+        window.onload = async () => {
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                console.log('✅ Backend connected:', data);
+            } catch (error) {
+                console.error('❌ Backend connection failed:', error);
+            }
+        };
+    </script>
+</body>
+</html>
