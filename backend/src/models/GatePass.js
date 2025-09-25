@@ -233,8 +233,18 @@ gatePassSchema.virtual('timeRemaining').get(function() {
 gatePassSchema.pre('save', function(next) {
   // Add to history if status changed
   if (this.isModified('status')) {
+    // Map status to appropriate history action
+    let historyAction = this.status;
+    if (this.status === 'pending') {
+      historyAction = 'created';
+    } else if (this.status === 'approved') {
+      historyAction = 'hod_approved';
+    } else if (this.status === 'rejected') {
+      historyAction = 'hod_rejected';
+    }
+    
     this.history.push({
-      action: this.status,
+      action: historyAction,
       timestamp: new Date(),
       by: this._currentUser || null,
       comments: this._statusChangeComment || null

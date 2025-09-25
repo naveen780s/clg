@@ -20,9 +20,18 @@ describe('API Security Tests', () => {
       name: 'Test Mentor',
       email: 'mentor@test.com',
       password: 'TestPass123!',
-      phone: '9876543210',
+      phone: '9876543212',
       role: 'mentor',
       department: 'Computer Science'
+    });
+
+    const testSecurity = await User.create({
+      name: 'Security Officer',
+      email: 'security@college.edu',
+      password: 'TestPass123!',
+      phone: '9876543213',
+      role: 'security',
+      department: 'Other'
     });
 
     // Create test student

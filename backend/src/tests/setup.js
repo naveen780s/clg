@@ -51,14 +51,17 @@ afterAll(async () => {
   }
 });
 
-// Clean up after each test
+// Clean up after each test (conditionally)
 afterEach(async () => {
   try {
-    // Clear all collections
-    const collections = mongoose.connection.collections;
-    for (const key in collections) {
-      const collection = collections[key];
-      await collection.deleteMany({});
+    // Only cleanup if not running integration tests that need persistent data
+    if (!process.env.SKIP_TEST_CLEANUP) {
+      // Clear all collections
+      const collections = mongoose.connection.collections;
+      for (const key in collections) {
+        const collection = collections[key];
+        await collection.deleteMany({});
+      }
     }
   } catch (error) {
     console.error('Test cleanup error:', error);

@@ -47,7 +47,7 @@ const createPassValidation = [
 // @route   POST /api/passes
 // @desc    Create a new gate pass request
 // @access  Private (Students only)
-router.post('/', requireRole('student'), createPassValidation, async (req, res) => {
+router.post('/', authenticateToken, requireRole('student'), createPassValidation, async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -343,13 +343,19 @@ router.get('/for-approval', authenticateToken, async (req, res) => {
 // @access  Private
 router.get('/stats/dashboard', authenticateToken, async (req, res) => {
   try {
+    // Only allow HOD and mentors to access statistics
+    if (req.user.role === 'student') {
+      return res.status(403).json({
+        success: false,
+        error: 'Forbidden',
+        message: 'Students are not authorized to access statistics'
+      });
+    }
+    
     const query = {};
     
     // Filter by role
     switch (req.user.role) {
-      case 'student':
-        query.student_id = req.user._id;
-        break;
       case 'mentor':
         query.mentor_id = req.user._id;
         break;
@@ -505,6 +511,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
 // @desc    Mentor approval for gate pass
 // @access  Private (Mentors only)
 router.put('/:id/mentor-approve', 
+  authenticateToken,
   requireRole('mentor'), 
   [
     body('action').isIn(['approve', 'reject']).withMessage('Action must be approve or reject'),
@@ -628,6 +635,7 @@ router.put('/:id/mentor-approve',
 // @desc    HOD final approval for gate pass
 // @access  Private (HODs only)
 router.put('/:id/hod-approve',
+  authenticateToken,
   requireRole('hod'),
   [
     body('action').isIn(['approve', 'reject']).withMessage('Action must be approve or reject'),
@@ -688,11 +696,8 @@ router.put('/:id/hod-approve',
         
         // Generate QR code and PDF
         try {
-          const qrCode = await QRService.generateQRCode({
-            passId: gatePass.passId,
-            token: gatePass.uniqueToken,
-            studentId: gatePass.student_id._id
-          });
+          const qrResult = await QRService.generatePassQR(gatePass);
+          const qrCode = qrResult.qrCode;
           
           gatePass.qrCode = qrCode;
           await gatePass.save();
@@ -765,7 +770,7 @@ router.put('/:id/hod-approve',
 // @route   POST /api/passes/:id/verify
 // @desc    Verify and use gate pass
 // @access  Private (Security only)
-router.post('/:id/verify', requireRole('security'), async (req, res) => {
+router.post('/:id/verify', authenticateToken, requireRole('security'), async (req, res) => {
   try {
     const { securityCode, action = 'exit' } = req.body;
 

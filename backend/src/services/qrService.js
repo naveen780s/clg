@@ -12,9 +12,9 @@ class QRService {
     try {
       const qrData = {
         passId: pass._id,
-        studentId: pass.studentId,
-        type: pass.type,
-        validFrom: pass.departureTime,
+        studentId: pass.student_id,
+        type: pass.category,
+        validFrom: pass.exitTime,
         validUntil: pass.returnTime,
         status: pass.status,
         securityCode: this.generateSecurityCode(pass._id),

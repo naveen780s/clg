@@ -63,18 +63,6 @@ const passService = {
     return response.data.data;
   },
 
-  // Approve pass (for mentors/HODs)
-  approvePass: async (passId, approvalData) => {
-    const response = await api.patch(`/passes/${passId}/approve`, approvalData);
-    return response.data.data;
-  },
-
-  // Reject pass (for mentors/HODs)
-  rejectPass: async (passId, rejectionData) => {
-    const response = await api.patch(`/passes/${passId}/reject`, rejectionData);
-    return response.data.data;
-  },
-
   // Get passes for approval (for mentors/HODs)
   getPassesForApproval: async (filters = {}) => {
     const queryParams = new URLSearchParams();

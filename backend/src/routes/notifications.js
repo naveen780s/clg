@@ -1,12 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const NotificationService = require('../services/notificationService');
+const { authenticateToken } = require('../middleware/auth');
 
 // Get notifications for the current user
-router.get('/', async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
   try {
     const { page = 1, limit = 20, unreadOnly = false } = req.query;
-    const userId = req.user.id;
+    const userId = req.user._id;
 
     const result = await NotificationService.getNotifications(userId, {
       page: parseInt(page),
@@ -25,9 +26,9 @@ router.get('/', async (req, res) => {
 });
 
 // Get unread notification count
-router.get('/unread-count', async (req, res) => {
+router.get('/unread-count', authenticateToken, async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user._id;
     const count = await NotificationService.getUnreadCount(userId);
     res.json({ count });
   } catch (error) {
@@ -40,10 +41,10 @@ router.get('/unread-count', async (req, res) => {
 });
 
 // Mark notification as read
-router.patch('/:notificationId/read', async (req, res) => {
+router.patch('/:notificationId/read', authenticateToken, async (req, res) => {
   try {
     const { notificationId } = req.params;
-    const userId = req.user.id;
+    const userId = req.user._id;
 
     const notification = await NotificationService.markAsRead(notificationId, userId);
     
@@ -65,9 +66,9 @@ router.patch('/:notificationId/read', async (req, res) => {
 });
 
 // Mark all notifications as read
-router.patch('/mark-all-read', async (req, res) => {
+router.patch('/mark-all-read', authenticateToken, async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user._id;
     const result = await NotificationService.markAllAsRead(userId);
 
     res.json({ 
@@ -84,10 +85,10 @@ router.patch('/mark-all-read', async (req, res) => {
 });
 
 // Delete notification
-router.delete('/:notificationId', async (req, res) => {
+router.delete('/:notificationId', authenticateToken, async (req, res) => {
   try {
     const { notificationId } = req.params;
-    const userId = req.user.id;
+    const userId = req.user._id;
 
     const notification = await NotificationService.deleteNotification(notificationId, userId);
     
@@ -110,7 +111,7 @@ if (process.env.NODE_ENV === 'development') {
   router.post('/test', async (req, res) => {
     try {
       const { title, message, type = 'info' } = req.body;
-      const userId = req.user.id;
+      const userId = req.user._id;
 
       const notification = await NotificationService.createNotification({
         userId,

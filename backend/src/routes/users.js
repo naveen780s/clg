@@ -6,7 +6,7 @@ const { authenticateToken, requireRole, requireSameDepartment } = require('../mi
 // Get current user profile
 router.get('/profile', authenticateToken, async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('-password');
+    const user = await User.findById(req.user._id).select('-password');
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -24,7 +24,7 @@ router.get('/profile', authenticateToken, async (req, res) => {
 router.put('/profile', authenticateToken, async (req, res) => {
   try {
     const { name, email, phone, department, year, rollNumber } = req.body;
-    const userId = req.user.id;
+    const userId = req.user._id;
 
     // Check if email is being changed and if it already exists
     if (email) {
@@ -213,10 +213,10 @@ router.get('/statistics', async (req, res) => {
 });
 
 // Change password
-router.put('/change-password', async (req, res) => {
+router.put('/change-password', authenticateToken, async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
-    const userId = req.user.id;
+    const userId = req.user._id;
 
     if (!currentPassword || !newPassword) {
       return res.status(400).json({ 
