@@ -14,8 +14,8 @@ class QRService {
         passId: pass._id,
         studentId: pass.student_id,
         type: pass.category,
-        validFrom: pass.exitTime,
-        validUntil: pass.returnTime,
+        validFrom: pass.departure_time,
+        validUntil: pass.return_time,
         status: pass.status,
         securityCode: this.generateSecurityCode(pass._id),
         timestamp: new Date().toISOString()

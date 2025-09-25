@@ -16,6 +16,7 @@ const ProfilePage = React.lazy(() => import('../pages/ProfilePage'));
 const CreatePass = React.lazy(() => import('../pages/passes/CreatePass'));
 const PassList = React.lazy(() => import('../pages/passes/PassList'));
 const PassDetail = React.lazy(() => import('../pages/passes/PassDetail'));
+const QRCodeDisplay = React.lazy(() => import('../pages/passes/QRCodeDisplay'));
 const ApprovalQueue = React.lazy(() => import('../pages/ApprovalQueue'));
 const Statistics = React.lazy(() => import('../pages/Statistics'));
 const QRScanner = React.lazy(() => import('../pages/QRScanner'));
@@ -157,6 +158,15 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute>
               <PassDetail />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/passes/:id/qr"
+          element={
+            <ProtectedRoute>
+              <QRCodeDisplay />
             </ProtectedRoute>
           }
         />

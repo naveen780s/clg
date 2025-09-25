@@ -343,12 +343,49 @@ router.get('/for-approval', authenticateToken, async (req, res) => {
 // @access  Private
 router.get('/stats/dashboard', authenticateToken, async (req, res) => {
   try {
-    // Only allow HOD and mentors to access statistics
+    // Students can see their own statistics, others require elevated access
     if (req.user.role === 'student') {
-      return res.status(403).json({
-        success: false,
-        error: 'Forbidden',
-        message: 'Students are not authorized to access statistics'
+      // Student-specific statistics
+      const studentStats = await GatePass.aggregate([
+        { $match: { student_id: req.user._id } },
+        {
+          $group: {
+            _id: '$status',
+            count: { $sum: 1 }
+          }
+        }
+      ]);
+
+      // Get recent passes for student
+      const recentPasses = await GatePass.find({ student_id: req.user._id })
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .populate('student_id', 'name student_id')
+        .select('passId status createdAt departure_time');
+
+      // Format student stats
+      const formattedStats = {
+        total: 0,
+        pending: 0,
+        mentor_approved: 0,
+        approved: 0,
+        used: 0,
+        expired: 0,
+        rejected: 0,
+        cancelled: 0
+      };
+
+      studentStats.forEach(stat => {
+        formattedStats[stat._id] = stat.count;
+        formattedStats.total += stat.count;
+      });
+
+      return res.json({
+        success: true,
+        data: {
+          stats: formattedStats,
+          recentPasses
+        }
       });
     }
     

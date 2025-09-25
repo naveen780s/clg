@@ -54,17 +54,43 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/college-g
 app.use(helmet());
 app.use(compression());
 
-// Rate limiting - apply different limits to different routes
-app.use('/api/', apiLimiter); // General API limiter
-app.use('/api/auth/login', authLimiter); // Strict limiter for login
-app.use('/api/auth/register', authLimiter); // Strict limiter for registration
+// Rate limiting - disabled for development
+if (process.env.NODE_ENV === 'production') {
+  app.use('/api/', apiLimiter); // General API limiter
+  app.use('/api/auth/login', authLimiter); // Strict limiter for login
+  app.use('/api/auth/register', authLimiter); // Strict limiter for registration
+}
 
 // CORS configuration
 app.use(cors({
-  origin: process.env.FRONTEND_URL || "http://localhost:3000",
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, curl, etc.)
+    if (!origin) return callback(null, true);
+    
+    // In development, allow localhost on any port
+    if (process.env.NODE_ENV !== 'production') {
+      if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+        return callback(null, true);
+      }
+    }
+    
+    // For production, use specific URL
+    const allowedOrigins = [
+      process.env.FRONTEND_URL || "http://localhost:3000",
+      "http://localhost:3000",
+      "http://127.0.0.1:3000"
+    ];
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  exposedHeaders: ['X-Total-Count', 'X-Page', 'X-Per-Page']
 }));
 
 // Body parsing middleware

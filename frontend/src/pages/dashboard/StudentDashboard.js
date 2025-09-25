@@ -49,7 +49,13 @@ const StudentDashboard = () => {
       const activePass = activePasses.length > 0 ? activePasses[0] : null;
       
       // Get statistics
-      const statistics = await passService.getPassStatistics();
+      const statsResponse = await passService.getPassStatistics();
+      const statistics = statsResponse?.stats || {
+        total: 0,
+        approved: 0,
+        pending: 0,
+        rejected: 0,
+      };
       
       setDashboardData({
         recentPasses,

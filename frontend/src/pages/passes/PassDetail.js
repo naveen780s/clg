@@ -23,8 +23,8 @@ const PassDetail = () => {
   const fetchPassDetails = async () => {
     try {
       setLoading(true);
-      const passData = await passService.getPass(id);
-      setPass(passData);
+      const response = await passService.getPassById(id);
+      setPass(response.gatePass || response);
     } catch (error) {
       console.error('Error fetching pass details:', error);
       navigate('/passes');
@@ -65,21 +65,21 @@ const PassDetail = () => {
     
     // Student can only cancel pending/approved passes
     if (user.role === 'student') {
-      return pass.student?._id === user._id && 
-             ['pending', 'approved'].includes(pass.status) &&
-             new Date(pass.exitTime) > new Date();
+      return pass.student_id?._id === user._id && 
+             ['pending', 'mentor_approved', 'approved'].includes(pass.status) &&
+             new Date(pass.departure_time) > new Date();
     }
     
     // Mentor can approve/reject pending passes
     if (user.role === 'mentor') {
       return pass.status === 'pending' && 
-             (!pass.approvals?.mentor || pass.approvals.mentor.status === 'pending');
+             pass.mentor_approval?.status === 'pending';
     }
     
     // HOD can approve/reject mentor-approved passes
     if (user.role === 'hod') {
-      return pass.approvals?.mentor?.status === 'approved' && 
-             (!pass.approvals?.hod || pass.approvals.hod.status === 'pending');
+      return pass.mentor_approval?.status === 'approved' && 
+             pass.hod_approval?.status === 'pending';
     }
     
     return false;
@@ -166,8 +166,18 @@ const PassDetail = () => {
               
               <div className="info-grid">
                 <div className="info-item">
+                  <label>Pass ID:</label>
+                  <span className="info-value secondary">{pass.passId}</span>
+                </div>
+                
+                <div className="info-item">
                   <label>Reason for Exit:</label>
                   <span className="info-value primary">{pass.reason}</span>
+                </div>
+                
+                <div className="info-item">
+                  <label>Category:</label>
+                  <span className="info-value">🏷️ {pass.category?.charAt(0).toUpperCase() + pass.category?.slice(1)}</span>
                 </div>
                 
                 <div className="info-item">
@@ -176,24 +186,31 @@ const PassDetail = () => {
                 </div>
                 
                 <div className="info-item">
-                  <label>Exit Time:</label>
+                  <label>Priority:</label>
+                  <span className={`info-value ${pass.priority === 'high' ? 'danger' : pass.priority === 'medium' ? 'warning' : 'success'}`}>
+                    {pass.priority === 'high' ? '🔴' : pass.priority === 'medium' ? '🟡' : '🟢'} {pass.priority?.charAt(0).toUpperCase() + pass.priority?.slice(1)}
+                  </span>
+                </div>
+                
+                <div className="info-item">
+                  <label>Departure Time:</label>
                   <span className="info-value">
-                    🕐 {dateUtils.formatDateTime(pass.exitTime)}
+                    🕐 {dateUtils.formatDateTime(pass.departure_time)}
                   </span>
                 </div>
                 
                 <div className="info-item">
                   <label>Expected Return:</label>
                   <span className="info-value">
-                    🕐 {dateUtils.formatDateTime(pass.expectedReturnTime)}
+                    🕐 {dateUtils.formatDateTime(pass.return_time)}
                   </span>
                 </div>
                 
-                {pass.actualReturnTime && (
+                {pass.entry_time && (
                   <div className="info-item">
                     <label>Actual Return:</label>
                     <span className="info-value success">
-                      ✅ {dateUtils.formatDateTime(pass.actualReturnTime)}
+                      ✅ {dateUtils.formatDateTime(pass.entry_time)}
                     </span>
                   </div>
                 )}
@@ -206,11 +223,23 @@ const PassDetail = () => {
                 </div>
               </div>
 
-              {pass.additionalNotes && (
-                <div className="additional-notes">
-                  <label>Additional Notes:</label>
-                  <div className="notes-content">
-                    {pass.additionalNotes}
+              {/* Emergency Contact Information */}
+              {pass.emergency_contact && (
+                <div className="emergency-contact">
+                  <label>Emergency Contact:</label>
+                  <div className="contact-details">
+                    <div className="contact-item">
+                      <span className="contact-label">Name:</span>
+                      <span className="contact-value">{pass.emergency_contact.name}</span>
+                    </div>
+                    <div className="contact-item">
+                      <span className="contact-label">Relation:</span>
+                      <span className="contact-value">{pass.emergency_contact.relation}</span>
+                    </div>
+                    <div className="contact-item">
+                      <span className="contact-label">Phone:</span>
+                      <span className="contact-value">📞 {pass.emergency_contact.phone}</span>
+                    </div>
                   </div>
                 </div>
               )}
@@ -227,11 +256,11 @@ const PassDetail = () => {
               
               <div className="student-card">
                 <div className="student-avatar">
-                  {pass.student?.name?.charAt(0)}
+                  {pass.student_id?.name?.charAt(0) || '?'}
                 </div>
                 <div className="student-details">
-                  <h3 className="student-name">{pass.student?.name}</h3>
-                  <p className="student-reg">📋 {pass.student?.regNumber}</p>
+                  <h3 className="student-name">{pass.student_id?.name || 'Unknown Student'}</h3>
+                  <p className="student-reg">📋 {pass.student_id?.student_id || pass.student_id?.regNumber || 'N/A'}</p>
                   <p className="student-year">🎓 {pass.student_id?.year} Year</p>
                   <p className="student-dept">🏛️ {pass.student_id?.department}</p>
                   {pass.student_id?.phone && (
@@ -256,7 +285,7 @@ const PassDetail = () => {
                   <div className="timeline-icon">👤</div>
                   <div className="timeline-content">
                     <h4>Pass Request Submitted</h4>
-                    <p>by {pass.student?.name}</p>
+                    <p>by {pass.student_id?.name || 'Student'}</p>
                     <span className="timeline-time">
                       {dateUtils.formatDateTime(pass.createdAt)}
                     </span>
@@ -265,31 +294,30 @@ const PassDetail = () => {
 
                 {/* Mentor Approval */}
                 <div className={`timeline-item ${
-                  pass.approvals?.mentor?.status === 'approved' ? 'completed' :
-                  pass.approvals?.mentor?.status === 'rejected' ? 'rejected' :
+                  pass.mentor_approval?.status === 'approved' ? 'completed' :
+                  pass.mentor_approval?.status === 'rejected' ? 'rejected' :
                   'pending'
                 }`}>
                   <div className="timeline-icon">👨‍🏫</div>
                   <div className="timeline-content">
                     <h4>Mentor Review</h4>
-                    {pass.approvals?.mentor ? (
+                    {pass.mentor_approval && pass.mentor_approval.status !== 'pending' ? (
                       <>
                         <p>
-                          {pass.approvals.mentor.status === 'approved' && '✅ Approved'}
-                          {pass.approvals.mentor.status === 'rejected' && '❌ Rejected'}
-                          {pass.approvals.mentor.status === 'pending' && '⏳ Pending'}
-                          {pass.approvals.mentor.approvedBy && 
-                            ` by ${pass.approvals.mentor.approvedBy.name}`
+                          {pass.mentor_approval.status === 'approved' && '✅ Approved'}
+                          {pass.mentor_approval.status === 'rejected' && '❌ Rejected'}
+                          {pass.mentor_approval.approved_by && 
+                            ` by ${pass.mentor_approval.approved_by.name || 'Mentor'}`
                           }
                         </p>
-                        {pass.approvals.mentor.comments && (
+                        {pass.mentor_approval.comments && (
                           <p className="approval-comments">
-                            💬 {pass.approvals.mentor.comments}
+                            💬 {pass.mentor_approval.comments}
                           </p>
                         )}
-                        {pass.approvals.mentor.approvedAt && (
+                        {pass.mentor_approval.timestamp && (
                           <span className="timeline-time">
-                            {dateUtils.formatDateTime(pass.approvals.mentor.approvedAt)}
+                            {dateUtils.formatDateTime(pass.mentor_approval.timestamp)}
                           </span>
                         )}
                       </>
@@ -301,35 +329,34 @@ const PassDetail = () => {
 
                 {/* HOD Approval */}
                 <div className={`timeline-item ${
-                  pass.approvals?.hod?.status === 'approved' ? 'completed' :
-                  pass.approvals?.hod?.status === 'rejected' ? 'rejected' :
-                  pass.approvals?.mentor?.status === 'approved' ? 'pending' : 'disabled'
+                  pass.hod_approval?.status === 'approved' ? 'completed' :
+                  pass.hod_approval?.status === 'rejected' ? 'rejected' :
+                  pass.mentor_approval?.status === 'approved' ? 'pending' : 'disabled'
                 }`}>
                   <div className="timeline-icon">👨‍💼</div>
                   <div className="timeline-content">
                     <h4>HOD Final Approval</h4>
-                    {pass.approvals?.hod ? (
+                    {pass.hod_approval && pass.hod_approval.status !== 'pending' ? (
                       <>
                         <p>
-                          {pass.approvals.hod.status === 'approved' && '✅ Approved'}
-                          {pass.approvals.hod.status === 'rejected' && '❌ Rejected'}
-                          {pass.approvals.hod.status === 'pending' && '⏳ Pending'}
-                          {pass.approvals.hod.approvedBy && 
-                            ` by ${pass.approvals.hod.approvedBy.name}`
+                          {pass.hod_approval.status === 'approved' && '✅ Approved'}
+                          {pass.hod_approval.status === 'rejected' && '❌ Rejected'}
+                          {pass.hod_approval.approved_by && 
+                            ` by ${pass.hod_approval.approved_by.name || 'HOD'}`
                           }
                         </p>
-                        {pass.approvals.hod.comments && (
+                        {pass.hod_approval.comments && (
                           <p className="approval-comments">
-                            💬 {pass.approvals.hod.comments}
+                            💬 {pass.hod_approval.comments}
                           </p>
                         )}
-                        {pass.approvals.hod.approvedAt && (
+                        {pass.hod_approval.timestamp && (
                           <span className="timeline-time">
-                            {dateUtils.formatDateTime(pass.approvals.hod.approvedAt)}
+                            {dateUtils.formatDateTime(pass.hod_approval.timestamp)}
                           </span>
                         )}
                       </>
-                    ) : pass.approvals?.mentor?.status === 'approved' ? (
+                    ) : pass.mentor_approval?.status === 'approved' ? (
                       <p>⏳ Awaiting HOD approval</p>
                     ) : (
                       <p>⚪ Waiting for mentor approval</p>
@@ -338,15 +365,15 @@ const PassDetail = () => {
                 </div>
 
                 {/* Security Checkout */}
-                {pass.status === 'active' || pass.status === 'completed' ? (
+                {pass.status === 'used' || pass.isUsed ? (
                   <div className="timeline-item completed">
                     <div className="timeline-icon">🛡️</div>
                     <div className="timeline-content">
                       <h4>Security Checkout</h4>
                       <p>✅ Student checked out</p>
-                      {pass.checkoutTime && (
+                      {pass.usedAt && (
                         <span className="timeline-time">
-                          {dateUtils.formatDateTime(pass.checkoutTime)}
+                          {dateUtils.formatDateTime(pass.usedAt)}
                         </span>
                       )}
                     </div>
@@ -362,17 +389,15 @@ const PassDetail = () => {
                 ) : null}
 
                 {/* Security Checkin */}
-                {pass.status === 'completed' && (
+                {pass.entry_time && (
                   <div className="timeline-item completed">
                     <div className="timeline-icon">🏠</div>
                     <div className="timeline-content">
                       <h4>Return Check-in</h4>
                       <p>✅ Student returned</p>
-                      {pass.actualReturnTime && (
-                        <span className="timeline-time">
-                          {dateUtils.formatDateTime(pass.actualReturnTime)}
-                        </span>
-                      )}
+                      <span className="timeline-time">
+                        {dateUtils.formatDateTime(pass.entry_time)}
+                      </span>
                     </div>
                   </div>
                 )}
@@ -473,18 +498,18 @@ const PassDetail = () => {
                   <span className="info-label">Duration:</span>
                   <span className="info-value">
                     {Math.ceil(
-                      (new Date(pass.expectedReturnTime) - new Date(pass.exitTime)) / 
+                      (new Date(pass.return_time) - new Date(pass.departure_time)) / 
                       (1000 * 60 * 60)
                     )} hours
                   </span>
                 </div>
                 
-                {pass.status === 'active' && (
+                {(pass.status === 'used' || pass.isUsed) && (
                   <div className="info-row">
                     <span className="info-label">Time Out:</span>
                     <span className="info-value warning">
                       {Math.floor(
-                        (new Date() - new Date(pass.checkoutTime || pass.exitTime)) / 
+                        (new Date() - new Date(pass.usedAt || pass.departure_time)) / 
                         (1000 * 60)
                       )} minutes
                     </span>
@@ -494,12 +519,12 @@ const PassDetail = () => {
                 <div className="info-row">
                   <span className="info-label">Priority:</span>
                   <span className={`info-value ${
-                    new Date(pass.exitTime) <= new Date() ? 'danger' : 
-                    new Date(pass.exitTime) <= new Date(Date.now() + 2 * 60 * 60 * 1000) ? 'warning' : 
+                    new Date(pass.departure_time) <= new Date() ? 'danger' : 
+                    new Date(pass.departure_time) <= new Date(Date.now() + 2 * 60 * 60 * 1000) ? 'warning' : 
                     'success'
                   }`}>
-                    {new Date(pass.exitTime) <= new Date() ? 'Urgent' : 
-                     new Date(pass.exitTime) <= new Date(Date.now() + 2 * 60 * 60 * 1000) ? 'Soon' : 
+                    {new Date(pass.departure_time) <= new Date() ? 'Urgent' : 
+                     new Date(pass.departure_time) <= new Date(Date.now() + 2 * 60 * 60 * 1000) ? 'Soon' : 
                      'Normal'}
                   </span>
                 </div>
