@@ -1,0 +1,621 @@
+/* 
+  🎨 College Gate Pass Management System - Modern Doodle Theme
+  A contemporary hand-drawn aesthetic with clean organization
+*/
+
+/* === RESET & BASE STYLES === */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  /* 🎨 Modern Doodle Color Palette */
+  --primary: #6366F1;
+  --primary-light: #8B5CF6;
+  --primary-dark: #4F46E5;
+  --secondary: #10B981;
+  --secondary-light: #34D399;
+  --accent: #F59E0B;
+  --accent-light: #FBBF24;
+  
+  /* 📝 Modern Hand-drawn Colors */
+  --ink-blue: #1E40AF;
+  --ink-black: #111827;
+  --paper-white: #FFFFFF;
+  --paper-cream: #F9FAFB;
+  --paper-light: #F3F4F6;
+  --pencil-gray: #6B7280;
+  --pencil-light: #9CA3AF;
+  --eraser-pink: #FDF2F8;
+  
+  /* 🌈 Modern Status Colors */
+  --success: #059669;
+  --success-light: #D1FAE5;
+  --success-dark: #047857;
+  --warning: #D97706;
+  --warning-light: #FEF3C7;
+  --warning-dark: #B45309;
+  --error: #DC2626;
+  --error-light: #FEE2E2;
+  --error-dark: #B91C1C;
+  --info: #2563EB;
+  --info-light: #DBEAFE;
+  --info-dark: #1D4ED8;
+  
+  /* 📏 Spacing & Sizing */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 3rem;
+  
+  /* 🎭 Border Radius */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --radius-full: 50%;
+  
+  /* 🌊 Shadows */  
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-doodle: 3px 3px 0px rgba(0, 0, 0, 0.1);
+  
+  /* ✏️ Hand-drawn Effects */
+  --doodle-border: 2px solid var(--ink-black);
+  --doodle-border-light: 1px solid var(--pencil-gray);
+  --sketch-filter: drop-shadow(2px 2px 0px rgba(0,0,0,0.1));
+}
+
+/* 📝 Modern Typography with Doodle Touch */
+body {
+  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  color: var(--ink-black);
+  background: linear-gradient(135deg, var(--paper-white) 0%, var(--paper-cream) 100%);
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+}
+
+/* Modern Headings with Subtle Doodle Style */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Poppins', 'Caveat', sans-serif;
+  font-weight: 600;
+  margin-bottom: var(--spacing-md);
+  position: relative;
+  letter-spacing: -0.025em;
+}
+
+h1 {
+  font-size: 3.5rem;
+  font-weight: 700;
+  margin-bottom: var(--spacing-xl);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+h2 {
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: var(--ink-black);
+}
+
+h3 {
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--ink-blue);
+}
+
+h4 {
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: var(--pencil-gray);
+}
+
+/* Playful underlines */
+.doodle-heading::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: repeating-linear-gradient(
+    to right,
+    var(--secondary) 0px,
+    var(--secondary) 10px,
+    transparent 10px,
+    transparent 15px
+  );
+  transform: skew(-5deg);
+}
+
+/* === DOODLE COMPONENTS === */
+
+/* 📄 Paper-like Containers */
+.doodle-paper {
+  background: var(--paper-white);
+  border: var(--doodle-border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-xl);
+  position: relative;
+  box-shadow: var(--shadow-doodle);
+  transform: rotate(0.5deg);
+  transition: all 0.3s ease;
+}
+
+.doodle-paper:hover {
+  transform: rotate(0deg) scale(1.02);
+  box-shadow: var(--shadow-xl);
+}
+
+/* Paper with margin lines */
+.doodle-paper-lined {
+  background-image: 
+    repeating-linear-gradient(
+      transparent,
+      transparent 1.5rem,
+      rgba(59, 130, 246, 0.1) 1.5rem,
+      rgba(59, 130, 246, 0.1) calc(1.5rem + 1px)
+    );
+  background-size: 100% 1.5rem;
+}
+
+/* Red margin line */
+.doodle-paper-lined::before {
+  content: '';
+  position: absolute;
+  left: 3rem;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: rgba(239, 68, 68, 0.3);
+}
+
+/* 🎨 Doodle Buttons */
+.doodle-btn {
+  font-family: 'Kalam', cursive;
+  font-weight: 500;
+  padding: 0.75rem 1.5rem;
+  border: 2px solid var(--ink-black);
+  border-radius: var(--radius-lg);
+  background: var(--primary);
+  color: white;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+  transform: rotate(-0.5deg);
+  box-shadow: 3px 3px 0px var(--ink-black);
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+}
+
+.doodle-btn:hover {
+  transform: rotate(0deg) translateY(-2px);
+  box-shadow: 5px 5px 0px var(--ink-black);
+  background: var(--primary-dark);
+}
+
+.doodle-btn:active {
+  transform: rotate(0deg) translateY(1px);
+  box-shadow: 2px 2px 0px var(--ink-black);
+}
+
+/* Button Variants */
+.doodle-btn-secondary {
+  background: var(--secondary);
+  color: var(--ink-black);
+}
+
+.doodle-btn-success {
+  background: var(--success);
+}
+
+.doodle-btn-warning {
+  background: var(--warning);
+  color: var(--ink-black);
+}
+
+.doodle-btn-error {
+  background: var(--error);
+}
+
+.doodle-btn-outline {
+  background: transparent;
+  color: var(--ink-black);
+  border: 2px dashed var(--ink-black);
+}
+
+.doodle-btn-outline:hover {
+  background: var(--ink-black);
+  color: white;
+  border-style: solid;
+}
+
+/* 📝 Form Elements */
+.doodle-input {
+  font-family: 'Kalam', cursive;
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--pencil-gray);
+  border-radius: var(--radius-md);
+  background: var(--paper-white);
+  color: var(--ink-black);
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.doodle-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+  transform: rotate(0deg);
+}
+
+.doodle-input:focus + .doodle-label,
+.doodle-input:not(:placeholder-shown) + .doodle-label {
+  transform: translateY(-1.5rem) scale(0.8);
+  color: var(--primary);
+  background: var(--paper-white);
+  padding: 0 0.5rem;
+}
+
+/* Floating Labels */
+.doodle-input-group {
+  position: relative;
+  margin-bottom: var(--spacing-lg);
+}
+
+.doodle-label {
+  position: absolute;
+  left: 1rem;
+  top: 0.75rem;
+  font-family: 'Kalam', cursive;
+  color: var(--pencil-gray);
+  transition: all 0.3s ease;
+  pointer-events: none;
+  transform-origin: left top;
+}
+
+/* Textarea */
+.doodle-textarea {
+  font-family: 'Kalam', cursive;
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--pencil-gray);
+  border-radius: var(--radius-md);
+  background: var(--paper-white);
+  color: var(--ink-black);
+  resize: vertical;
+  min-height: 100px;
+  line-height: 1.5;
+}
+
+/* Select Dropdown */
+.doodle-select {
+  font-family: 'Kalam', cursive;
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--pencil-gray);
+  border-radius: var(--radius-md);
+  background: var(--paper-white);
+  color: var(--ink-black);
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236B7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
+}
+
+/* 🎯 Cards with Doodle Style */
+.doodle-card {
+  background: var(--paper-white);
+  border: 2px solid var(--ink-black);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-xl);
+  position: relative;
+  box-shadow: var(--shadow-doodle);
+  transition: all 0.3s ease;
+  transform: rotate(-0.2deg);
+}
+
+.doodle-card:hover {
+  transform: rotate(0deg) translateY(-5px);
+  box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.15);
+}
+
+/* Card with corner fold effect */
+.doodle-card-folded::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  border: 15px solid;
+  border-color: var(--pencil-gray) var(--pencil-gray) transparent transparent;
+  border-radius: 0 var(--radius-xl) 0 0;
+}
+
+.doodle-card-folded::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  border: 13px solid;
+  border-color: var(--paper-white) var(--paper-white) transparent transparent;
+  border-radius: 0 var(--radius-xl) 0 0;
+}
+
+/* 🏷️ Tags and Badges */
+.doodle-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+  font-family: 'Kalam', cursive;
+  font-weight: 500;
+  border: 2px solid var(--ink-black);
+  border-radius: var(--radius-full);
+  background: var(--secondary-light);
+  color: var(--ink-black);
+  transform: rotate(-2deg);
+  transition: transform 0.2s ease;
+}
+
+.doodle-badge:hover {
+  transform: rotate(0deg);
+}
+
+/* Badge Variants */
+.doodle-badge-success {
+  background: var(--success-light);
+  border-color: var(--success);
+}
+
+.doodle-badge-warning {
+  background: var(--warning-light);
+  border-color: var(--warning);
+}
+
+.doodle-badge-error {
+  background: var(--error-light);
+  border-color: var(--error);
+}
+
+.doodle-badge-info {
+  background: var(--info-light);
+  border-color: var(--info);
+}
+
+/* 📊 Progress Bar */
+.doodle-progress {
+  width: 100%;
+  height: 1rem;
+  background: var(--paper-cream);
+  border: 2px solid var(--ink-black);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  position: relative;
+}
+
+.doodle-progress-bar {
+  height: 100%;
+  background: linear-gradient(45deg, var(--primary) 25%, var(--primary-light) 25%, var(--primary-light) 50%, var(--primary) 50%, var(--primary) 75%, var(--primary-light) 75%);
+  background-size: 1rem 1rem;
+  border-radius: var(--radius-full);
+  transition: width 0.5s ease;
+  animation: progress-stripes 1s linear infinite;
+}
+
+@keyframes progress-stripes {
+  0% { background-position: 0 0; }
+  100% { background-position: 1rem 0; }
+}
+
+/* 🔔 Notifications */
+.doodle-toast {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1000;
+  background: var(--paper-white);
+  border: 2px solid var(--ink-black);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.5rem;
+  box-shadow: var(--shadow-doodle);
+  transform: rotate(-1deg);
+  animation: toast-slide-in 0.3s ease;
+}
+
+@keyframes toast-slide-in {
+  from {
+    transform: translateX(100%) rotate(-1deg);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0) rotate(-1deg);
+    opacity: 1;
+  }
+}
+
+/* 📱 Mobile Responsive */
+@media (max-width: 768px) {
+  h1 { font-size: 2.5rem; }
+  h2 { font-size: 2rem; }
+  h3 { font-size: 1.5rem; }
+  
+  .doodle-paper {
+    padding: var(--spacing-lg);
+    margin: var(--spacing-md);
+  }
+  
+  .doodle-btn {
+    padding: 0.65rem 1.25rem;
+    font-size: 0.9rem;
+  }
+}
+
+/* ⚡ Animations */
+@keyframes doodle-bounce {
+  0%, 20%, 53%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40%, 43% {
+    transform: translateY(-8px);
+  }
+  70% {
+    transform: translateY(-4px);
+  }
+  90% {
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes doodle-wiggle {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(1deg); }
+  75% { transform: rotate(-1deg); }
+  100% { transform: rotate(0deg); }
+}
+
+@keyframes doodle-float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-5px) rotate(1deg); }
+}
+
+/* Utility Classes */
+.animate-bounce { animation: doodle-bounce 1s infinite; }
+.animate-wiggle { animation: doodle-wiggle 0.5s ease-in-out infinite; }
+.animate-float { animation: doodle-float 3s ease-in-out infinite; }
+
+/* 🎨 Background Patterns */
+.doodle-bg-dots {
+  background-image: radial-gradient(circle, var(--pencil-gray) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.doodle-bg-lines {
+  background-image: 
+    linear-gradient(90deg, rgba(107, 114, 128, 0.1) 1px, transparent 1px),
+    linear-gradient(rgba(107, 114, 128, 0.1) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.doodle-bg-grid {
+  background-image: 
+    linear-gradient(rgba(107, 114, 128, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(107, 114, 128, 0.1) 1px, transparent 1px);
+  background-size: 1rem 1rem;
+}
+
+/* Hand-drawn borders */
+.doodle-border-sketch {
+  border: none;
+  position: relative;
+  background: var(--paper-white);
+}
+
+.doodle-border-sketch::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: 
+    linear-gradient(45deg, transparent 33%, var(--ink-black) 33%, var(--ink-black) 36%, transparent 36%),
+    linear-gradient(-45deg, transparent 33%, var(--ink-black) 33%, var(--ink-black) 36%, transparent 36%);
+  background-size: 8px 8px;
+  z-index: -1;
+}
+
+/* 🎭 Loading States */
+.doodle-skeleton {
+  background: linear-gradient(90deg, var(--paper-cream) 25%, var(--paper-white) 50%, var(--paper-cream) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+  border-radius: var(--radius-md);
+}
+
+@keyframes skeleton-loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* 🌈 Utility Classes */
+.text-primary { color: var(--primary); }
+.text-secondary { color: var(--secondary); }
+.text-success { color: var(--success); }
+.text-warning { color: var(--warning); }
+.text-error { color: var(--error); }
+.text-info { color: var(--info); }
+
+.bg-primary { background-color: var(--primary); }
+.bg-secondary { background-color: var(--secondary); }
+.bg-success { background-color: var(--success); }
+.bg-warning { background-color: var(--warning); }
+.bg-error { background-color: var(--error); }
+.bg-info { background-color: var(--info); }
+
+.rotate-1 { transform: rotate(1deg); }
+.rotate-2 { transform: rotate(2deg); }
+.rotate-3 { transform: rotate(3deg); }
+.-rotate-1 { transform: rotate(-1deg); }
+.-rotate-2 { transform: rotate(-2deg); }
+.-rotate-3 { transform: rotate(-3deg); }
+
+/* 🎪 Fun Elements */
+.doodle-sticker {
+  position: relative;
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background: var(--accent-light);
+  border: 2px solid var(--ink-black);
+  border-radius: var(--radius-lg);
+  transform: rotate(-3deg);
+  box-shadow: var(--shadow-md);
+  font-family: 'Caveat', cursive;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.doodle-arrow {
+  position: relative;
+  color: var(--accent);
+  font-size: 2rem;
+  display: inline-block;
+  animation: doodle-bounce 2s infinite;
+}
+
+.doodle-arrow::after {
+  content: '↗';
+  transform: rotate(15deg);
+  display: inline-block;
+}
+
+/* Print Styles */
+@media print {
+  .doodle-paper {
+    box-shadow: none;
+    transform: none;
+    border: 1px solid black;
+  }
+  
+  .doodle-btn {
+    box-shadow: none;
+    transform: none;
+  }
+}
