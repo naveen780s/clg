@@ -3,7 +3,7 @@ const { body, validationResult } = require('express-validator');
 const GatePass = require('../models/GatePass');
 const User = require('../models/User');
 const Notification = require('../models/Notification');
-const { requireRole, requirePermission, requireMentorRelation } = require('../middleware/auth');
+const { authenticateToken, requireRole, requirePermission, requireMentorRelation } = require('../middleware/auth');
 const NotificationService = require('../services/notificationService');
 const QRService = require('../services/qrService');
 const PDFService = require('../services/pdfService');
@@ -187,7 +187,7 @@ router.post('/', requireRole('student'), createPassValidation, async (req, res) 
 // @route   GET /api/passes
 // @desc    Get user's gate passes
 // @access  Private
-router.get('/', async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
   try {
     const {
       status,
@@ -260,10 +260,162 @@ router.get('/', async (req, res) => {
   }
 });
 
+// @route   GET /api/passes/for-approval
+// @desc    Get passes that need approval from current user
+// @access  Private (Mentors and HODs)
+router.get('/for-approval', authenticateToken, async (req, res) => {
+  try {
+    const {
+      status,
+      page = 1,
+      limit = 10,
+      sortBy = 'createdAt',
+      sortOrder = 'desc'
+    } = req.query;
+
+    const query = {};
+    const options = {
+      page: parseInt(page),
+      limit: parseInt(limit),
+      sort: { [sortBy]: sortOrder === 'desc' ? -1 : 1 },
+      populate: [
+        { path: 'student_id', select: 'name email student_id phone department year' },
+        { path: 'mentor_id', select: 'name email phone' },
+        { path: 'hod_id', select: 'name email phone' }
+      ]
+    };
+
+    // Build query based on user role
+    if (req.user.role === 'mentor') {
+      query.mentor_id = req.user._id;
+      // Only show passes that need mentor approval
+      query['mentor_approval.status'] = 'pending';
+    } else if (req.user.role === 'hod') {
+      // Find students in the same department
+      const hodStudents = await User.find({ 
+        department: req.user.department,
+        role: 'student'
+      }).select('_id');
+      query.student_id = { $in: hodStudents.map(s => s._id) };
+      // Only show passes that mentor approved but HOD hasn't
+      query['mentor_approval.status'] = 'approved';
+      query['hod_approval.status'] = 'pending';
+    } else {
+      return res.status(403).json({
+        success: false,
+        error: 'Access denied',
+        message: 'Only mentors and HODs can access this endpoint'
+      });
+    }
+
+    // Apply status filter if provided
+    if (status) {
+      query.status = status;
+    }
+
+    const passes = await GatePass.paginate(query, options);
+
+    res.json({
+      success: true,
+      data: {
+        passes: passes.docs,
+        pagination: {
+          page: passes.page,
+          pages: passes.totalPages,
+          total: passes.totalDocs,
+          limit: passes.limit
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Passes for approval fetch error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch passes for approval',
+      message: 'An error occurred while fetching passes for approval'
+    });
+  }
+});
+
+// @route   GET /api/passes/stats/dashboard
+// @desc    Get dashboard statistics
+// @access  Private
+router.get('/stats/dashboard', authenticateToken, async (req, res) => {
+  try {
+    const query = {};
+    
+    // Filter by role
+    switch (req.user.role) {
+      case 'student':
+        query.student_id = req.user._id;
+        break;
+      case 'mentor':
+        query.mentor_id = req.user._id;
+        break;
+      case 'hod':
+        const hodStudents = await User.find({ 
+          department: req.user.department,
+          role: 'student'
+        }).select('_id');
+        query.student_id = { $in: hodStudents.map(s => s._id) };
+        break;
+    }
+
+    const stats = await GatePass.aggregate([
+      { $match: query },
+      {
+        $group: {
+          _id: '$status',
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    // Get recent passes
+    const recentPasses = await GatePass.find(query)
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .populate('student_id', 'name student_id')
+      .select('passId status createdAt departure_time');
+
+    // Format stats
+    const formattedStats = {
+      total: 0,
+      pending: 0,
+      mentor_approved: 0,
+      approved: 0,
+      used: 0,
+      expired: 0,
+      rejected: 0
+    };
+
+    stats.forEach(stat => {
+      formattedStats[stat._id] = stat.count;
+      formattedStats.total += stat.count;
+    });
+
+    res.json({
+      success: true,
+      data: {
+        stats: formattedStats,
+        recentPasses
+      }
+    });
+
+  } catch (error) {
+    console.error('Dashboard stats error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch dashboard statistics'
+    });
+  }
+});
+
 // @route   GET /api/passes/active
 // @desc    Get active passes for current user
 // @access  Private
-router.get('/active', async (req, res) => {
+router.get('/active', authenticateToken, async (req, res) => {
   try {
     const query = { student_id: req.user._id };
     
@@ -300,7 +452,7 @@ router.get('/active', async (req, res) => {
 // @route   GET /api/passes/:id
 // @desc    Get specific gate pass
 // @access  Private
-router.get('/:id', async (req, res) => {
+router.get('/:id', authenticateToken, async (req, res) => {
   try {
     const gatePass = await GatePass.findById(req.params.id)
       .populate('student_id', 'name email student_id phone department year hostel_block room_number')
@@ -719,7 +871,7 @@ router.post('/:id/verify', requireRole('security'), async (req, res) => {
 // @route   GET /api/passes/:id/qr
 // @desc    Get QR code for gate pass
 // @access  Private
-router.get('/:id/qr', async (req, res) => {
+router.get('/:id/qr', authenticateToken, async (req, res) => {
   try {
     const gatePass = await GatePass.findById(req.params.id);
 
@@ -771,7 +923,7 @@ router.get('/:id/qr', async (req, res) => {
 // @route   GET /api/passes/:id/pdf
 // @desc    Download gate pass PDF
 // @access  Private
-router.get('/:id/pdf', async (req, res) => {
+router.get('/:id/pdf', authenticateToken, async (req, res) => {
   try {
     const gatePass = await GatePass.findById(req.params.id)
       .populate('student_id')
@@ -837,80 +989,6 @@ router.get('/:id/pdf', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to download PDF'
-    });
-  }
-});
-
-// @route   GET /api/passes/stats/dashboard
-// @desc    Get dashboard statistics
-// @access  Private
-router.get('/stats/dashboard', async (req, res) => {
-  try {
-    const query = {};
-    
-    // Filter by role
-    switch (req.user.role) {
-      case 'student':
-        query.student_id = req.user._id;
-        break;
-      case 'mentor':
-        query.mentor_id = req.user._id;
-        break;
-      case 'hod':
-        const hodStudents = await User.find({ 
-          department: req.user.department,
-          role: 'student'
-        }).select('_id');
-        query.student_id = { $in: hodStudents.map(s => s._id) };
-        break;
-    }
-
-    const stats = await GatePass.aggregate([
-      { $match: query },
-      {
-        $group: {
-          _id: '$status',
-          count: { $sum: 1 }
-        }
-      }
-    ]);
-
-    // Get recent passes
-    const recentPasses = await GatePass.find(query)
-      .sort({ createdAt: -1 })
-      .limit(5)
-      .populate('student_id', 'name student_id')
-      .select('passId status createdAt departure_time');
-
-    // Format stats
-    const formattedStats = {
-      total: 0,
-      pending: 0,
-      mentor_approved: 0,
-      approved: 0,
-      used: 0,
-      expired: 0,
-      rejected: 0
-    };
-
-    stats.forEach(stat => {
-      formattedStats[stat._id] = stat.count;
-      formattedStats.total += stat.count;
-    });
-
-    res.json({
-      success: true,
-      data: {
-        stats: formattedStats,
-        recentPasses
-      }
-    });
-
-  } catch (error) {
-    console.error('Dashboard stats error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch dashboard statistics'
     });
   }
 });

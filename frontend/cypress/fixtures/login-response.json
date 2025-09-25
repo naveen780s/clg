@@ -1,0 +1,17 @@
+{
+  "success": true,
+  "data": {
+    "user": {
+      "_id": "64a1b2c3d4e5f6789abc0123",
+      "name": "Test User",
+      "email": "test@example.com",
+      "role": "student",
+      "department": "cse",
+      "year": 3,
+      "section": "A",
+      "regNumber": "21CS1234"
+    },
+    "token": "mock.jwt.token.here"
+  },
+  "message": "Login successful"
+}

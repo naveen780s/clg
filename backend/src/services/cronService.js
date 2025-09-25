@@ -11,6 +11,8 @@ class CronService {
     this.startPassReminderJob();
     this.startExpiredPassCleanup();
     this.startOverduePassNotifications();
+    this.startAutoExpiryJob();
+    this.startExpiryWarningJob();
     console.log('🕐 All cron jobs started');
   }
 
@@ -124,6 +126,123 @@ class CronService {
     });
 
     this.jobs.push({ name: 'overdue-notifications', job });
+  }
+
+  // Auto-expire approved passes after 1 hour (runs every 5 minutes)
+  startAutoExpiryJob() {
+    const job = cron.schedule('*/5 * * * *', async () => {
+      try {
+        const now = new Date();
+        
+        // Find passes that have expired (1 hour after approval)
+        const expiredPasses = await GatePass.find({
+          status: 'approved',
+          expiresAt: { $lt: now },
+          isUsed: false
+        }).populate('student_id', 'name phone email');
+
+        for (const pass of expiredPasses) {
+          // Mark as expired
+          pass.status = 'expired';
+          await pass.save();
+
+          // Notify student
+          await NotificationService.createNotification({
+            userId: pass.student_id._id,
+            title: 'Gate Pass Expired',
+            message: `Your gate pass ${pass.passId} has expired and is no longer valid for use.`,
+            type: 'error',
+            data: { 
+              passId: pass._id,
+              action: 'expired',
+              expiredAt: now
+            }
+          });
+
+          // Send SMS notification if available
+          if (global.smsService && pass.student_id.phone) {
+            await global.smsService.notifyPassExpired(
+              pass.student_id.phone,
+              pass.passId
+            );
+          }
+
+          console.log(`⏰ Expired pass: ${pass.passId} for student: ${pass.student_id.name}`);
+        }
+
+        if (expiredPasses.length > 0) {
+          console.log(`⏰ Auto-expired ${expiredPasses.length} passes`);
+        }
+
+      } catch (error) {
+        console.error('Error in auto-expiry job:', error);
+      }
+    });
+
+    this.jobs.push({ name: 'auto-expiry', job });
+  }
+
+  // Warn users 15 minutes before pass expires (runs every 5 minutes)
+  startExpiryWarningJob() {
+    const job = cron.schedule('*/5 * * * *', async () => {
+      try {
+        const now = new Date();
+        const warningTime = new Date(now.getTime() + 15 * 60 * 1000); // 15 minutes from now
+        
+        // Find passes that will expire in the next 15 minutes
+        const soonToExpirePasses = await GatePass.find({
+          status: 'approved',
+          expiresAt: { 
+            $gte: now,
+            $lte: warningTime 
+          },
+          isUsed: false,
+          'metadata.expiryWarningSet': { $ne: true }
+        }).populate('student_id', 'name phone email');
+
+        for (const pass of soonToExpirePasses) {
+          const minutesLeft = Math.ceil((pass.expiresAt - now) / (1000 * 60));
+          
+          // Notify student
+          await NotificationService.createNotification({
+            userId: pass.student_id._id,
+            title: 'Gate Pass Expiring Soon',
+            message: `Your gate pass ${pass.passId} will expire in ${minutesLeft} minutes. Use it soon!`,
+            type: 'warning',
+            data: { 
+              passId: pass._id,
+              action: 'expiry_warning',
+              minutesLeft: minutesLeft
+            }
+          });
+
+          // Send SMS notification if available
+          if (global.smsService && pass.student_id.phone) {
+            await global.smsService.notifyPassExpiring(
+              pass.student_id.phone,
+              pass.passId,
+              pass.expiresAt.toLocaleString()
+            );
+          }
+
+          // Mark as warning sent to avoid duplicate warnings
+          if (!pass.metadata) pass.metadata = {};
+          pass.metadata.expiryWarningSet = true;
+          await pass.save();
+
+          console.log(`⚠️ Expiry warning sent for pass: ${pass.passId}`);
+        }
+
+        if (soonToExpirePasses.length > 0) {
+          console.log(`⚠️ Sent expiry warnings for ${soonToExpirePasses.length} passes`);
+        }
+
+      } catch (error) {
+        console.error('Error in expiry warning job:', error);
+      }
+    });
+
+    this.jobs.push({ name: 'expiry-warnings', job });
   }
 
   stopAll() {

@@ -1,10 +1,15 @@
+const { logError, logSecurity } = require('../utils/logger');
+
 // Global error handler middleware
 const errorHandler = (err, req, res, next) => {
   let error = { ...err };
   error.message = err.message;
 
-  // Log error
-  console.error('Error:', err);
+  // Enhanced error logging
+  logError(err, req, {
+    statusCode: error.statusCode || 500,
+    user: req.user ? { id: req.user.id, email: req.user.email, role: req.user.role } : null
+  });
 
   // Mongoose bad ObjectId
   if (err.name === 'CastError') {
@@ -29,11 +34,13 @@ const errorHandler = (err, req, res, next) => {
   if (err.name === 'JsonWebTokenError') {
     const message = 'Invalid token';
     error = { message, statusCode: 401 };
+    logSecurity('Invalid JWT Token', { error: err.message }, req, 'warn');
   }
 
   if (err.name === 'TokenExpiredError') {
     const message = 'Token expired';
     error = { message, statusCode: 401 };
+    logSecurity('Expired JWT Token', { error: err.message }, req, 'info');
   }
 
   // File upload errors

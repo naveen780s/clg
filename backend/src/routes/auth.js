@@ -7,6 +7,12 @@ const {
   verifyRefreshToken,
   authenticateToken 
 } = require('../middleware/auth');
+const {
+  validateUserRegistration,
+  validateUserLogin,
+  validatePasswordReset,
+  validatePasswordUpdate
+} = require('../middleware/validation');
 
 const router = express.Router();
 

@@ -7,7 +7,7 @@ import { dateUtils } from '../../services/utils';
 import Loader from '../../components/common/Loader';
 
 const PassDetail = () => {
-  const { passId } = useParams();
+  const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   
@@ -18,12 +18,12 @@ const PassDetail = () => {
   useEffect(() => {
     fetchPassDetails();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [passId]);
+  }, [id]);
 
   const fetchPassDetails = async () => {
     try {
       setLoading(true);
-      const passData = await passService.getPass(passId);
+      const passData = await passService.getPass(id);
       setPass(passData);
     } catch (error) {
       console.error('Error fetching pass details:', error);
@@ -38,9 +38,9 @@ const PassDetail = () => {
       setActionLoading(true);
       
       if (role === 'mentor') {
-        await passService.mentorApproval(passId, action, comments);
+        await passService.mentorApproval(id, action, comments);
       } else if (role === 'hod') {
-        await passService.hodApproval(passId, action, comments);
+        await passService.hodApproval(id, action, comments);
       }
       
       fetchPassDetails();
@@ -52,16 +52,11 @@ const PassDetail = () => {
   };
 
   const handleCancelPass = async () => {
-    if (window.confirm('Are you sure you want to cancel this pass?')) {
-      try {
-        setActionLoading(true);
-        await passService.cancelPass(passId);
-        fetchPassDetails();
-      } catch (error) {
-        console.error('Error cancelling pass:', error);
-      } finally {
-        setActionLoading(false);
-      }
+    try {
+      await passService.cancelPass(id);
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Error cancelling pass:', error);
     }
   };
 

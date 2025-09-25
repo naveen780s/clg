@@ -34,25 +34,30 @@ const MentorDashboard = () => {
       setLoading(true);
       
       // Fetch pending passes for approval
-      const pendingPasses = await passService.getPassesForApproval({ 
+      const pendingResponse = await passService.getPassesForApproval({ 
         status: 'pending',
         limit: 10 
       });
       
       // Get recently approved passes
-      const recentlyApproved = await passService.getPassesForApproval({ 
+      const approvedResponse = await passService.getPassesForApproval({ 
         status: 'approved',
         limit: 5,
         sort: '-updatedAt'
       });
       
       // Get statistics
-      const statistics = await passService.getPassStatistics();
+      const statsResponse = await passService.getPassStatistics();
       
       setDashboardData({
-        pendingPasses,
-        recentlyApproved,
-        statistics,
+        pendingPasses: pendingResponse.passes || [],
+        recentlyApproved: approvedResponse.passes || [],
+        statistics: statsResponse.stats || {
+          totalPending: 0,
+          approvedToday: 0,
+          myStudents: 0,
+          rejectedCount: 0,
+        },
       });
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -63,10 +68,7 @@ const MentorDashboard = () => {
 
   const handleQuickApprove = async (passId) => {
     try {
-      await passService.approvePass(passId, {
-        comments: 'Quick approval from dashboard',
-        level: 'mentor'
-      });
+      await passService.mentorApproval(passId, 'approve', 'Quick approval from dashboard');
       
       // Refresh data
       fetchDashboardData();

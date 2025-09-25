@@ -40,20 +40,25 @@ const ApprovalQueue = () => {
       
       if (user.role === 'mentor') {
         // Get passes pending mentor approval
-        pendingPasses = await passService.getUserPasses({
+        const response = await passService.getPassesForApproval({
           status: 'pending',
-          mentorId: user._id,
           sortBy: filters.sortBy,
           search: filters.searchTerm || undefined
         });
+        pendingPasses = response.passes || [];
       } else if (user.role === 'hod') {
         // Get passes pending HOD approval (mentor-approved)
-        pendingPasses = await passService.getUserPasses({
+        const response = await passService.getPassesForApproval({
           status: 'mentor_approved',
-          department: user.department,
           sortBy: filters.sortBy,
           search: filters.searchTerm || undefined
         });
+        pendingPasses = response.passes || [];
+      }
+      
+      // Ensure pendingPasses is an array
+      if (!Array.isArray(pendingPasses)) {
+        pendingPasses = [];
       }
       
       // Apply filters

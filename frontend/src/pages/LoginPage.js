@@ -140,6 +140,7 @@ const LoginPage = () => {
                     className={`form-input ${errors.email ? 'error' : ''}`}
                     placeholder="Enter your email"
                     autoComplete="email"
+                    data-cy="email-input"
                   />
                   <div className="input-icon">📧</div>
                 </div>
@@ -162,6 +163,7 @@ const LoginPage = () => {
                     className={`form-input ${errors.password ? 'error' : ''}`}
                     placeholder="Enter your password"
                     autoComplete="current-password"
+                    data-cy="password-input"
                   />
                   <button
                     type="button"
@@ -199,6 +201,7 @@ const LoginPage = () => {
                 disabled={loading}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
+                data-cy="login-button"
               >
                 {loading ? (
                   <div className="btn-loading">

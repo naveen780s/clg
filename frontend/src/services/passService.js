@@ -145,7 +145,7 @@ const passService = {
       }
     });
 
-    const response = await api.get(`/passes/statistics?${queryParams.toString()}`);
+    const response = await api.get(`/passes/stats/dashboard?${queryParams.toString()}`);
     return response.data.data;
   },
 
@@ -192,6 +192,24 @@ const passService = {
   // Get active passes for today
   getActivePasses: async () => {
     const response = await api.get('/passes/active');
+    return response.data.data;
+  },
+
+  // Mentor approval
+  mentorApproval: async (passId, action, comments) => {
+    const response = await api.put(`/passes/${passId}/mentor-approve`, {
+      action,
+      comments
+    });
+    return response.data.data;
+  },
+
+  // HOD approval
+  hodApproval: async (passId, action, comments) => {
+    const response = await api.put(`/passes/${passId}/hod-approve`, {
+      action,
+      comments
+    });
     return response.data.data;
   },
 };
