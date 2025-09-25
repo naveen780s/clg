@@ -109,9 +109,9 @@ const PassList = () => {
   };
 
   const canCancelPass = (pass) => {
-    return pass.student?._id === user._id && 
+    return pass.student_id?._id === user._id && 
            ['pending', 'approved'].includes(pass.status) &&
-           new Date(pass.exitTime) > new Date();
+           new Date(pass.departure_time) > new Date();
   };
 
   const handleCancelPass = async (passId) => {
@@ -215,7 +215,7 @@ const PassList = () => {
                 className="filter-select"
               >
                 <option value="createdAt">Created Date</option>
-                <option value="exitTime">Exit Time</option>
+                <option value="departure_time">Exit Time</option>
                 <option value="status">Status</option>
                 <option value="reason">Reason</option>
               </select>
@@ -272,13 +272,13 @@ const PassList = () => {
                         <div className="timing-item">
                           <span className="timing-label">Exit:</span>
                           <span className="timing-value">
-                            {dateUtils.formatDateTime(pass.exitTime)}
+                            {dateUtils.formatDateTime(pass.departure_time)}
                           </span>
                         </div>
                         <div className="timing-item">
                           <span className="timing-label">Return:</span>
                           <span className="timing-value">
-                            {dateUtils.formatDateTime(pass.expectedReturnTime)}
+                            {dateUtils.formatDateTime(pass.return_time)}
                           </span>
                         </div>
                       </div>
@@ -309,10 +309,10 @@ const PassList = () => {
                       )}
                     </div>
 
-                    {user.role === 'student' && pass.student?._id === user._id && (
+                    {user.role === 'student' && pass.student_id?._id === user._id && (
                       <div className="student-info">
-                        <p className="student-name">👤 {pass.student.name}</p>
-                        <p className="student-reg">{pass.student.regNumber}</p>
+                        <p className="student-name">👤 {pass.student_id.name}</p>
+                        <p className="student-reg">{pass.student_id.student_id}</p>
                       </div>
                     )}
                   </div>
