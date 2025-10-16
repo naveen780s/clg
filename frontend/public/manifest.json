@@ -1,0 +1,47 @@
+{
+  "short_name": "Gate Pass",
+  "name": "College Gate Pass Management System",
+  "description": "A modern college gate pass management system with doodle theme",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "logo192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "logo512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#4F46E5",
+  "background_color": "#ffffff",
+  "categories": ["education", "productivity"],
+  "lang": "en",
+  "dir": "ltr",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "Go to main dashboard",
+      "url": "/dashboard",
+      "icons": [{ "src": "favicon.ico", "sizes": "192x192" }]
+    },
+    {
+      "name": "Create Pass",
+      "short_name": "New Pass",
+      "description": "Create a new gate pass",
+      "url": "/create-pass",
+      "icons": [{ "src": "favicon.ico", "sizes": "192x192" }]
+    }
+  ]
+}
